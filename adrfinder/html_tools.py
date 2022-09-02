@@ -3,9 +3,11 @@ from bs4 import BeautifulSoup
 from jsonpath_ng.ext import parse
 import re
 
+
 class JSONNotFound(ValueError):
     def __init__(self, msg):
         ValueError.__init__(self, msg)
+
 
 # Given a CSS Rule, and a blob of HTML, return the blob of HTML that matches
 def css_filter(css_filter, html_content):
@@ -25,16 +27,15 @@ def xpath_filter(xpath_filter, html_content):
     tree = html.fromstring(html_content)
     html_block = ""
 
-    for item in tree.xpath(xpath_filter.strip(), namespaces={'re':'http://exslt.org/regular-expressions'}):
-        html_block+= etree.tostring(item, pretty_print=True).decode('utf-8')+"<br/>"
+    for item in tree.xpath(xpath_filter.strip(), namespaces={'re': 'http://exslt.org/regular-expressions'}):
+        html_block += etree.tostring(item, pretty_print=True).decode('utf-8') + "<br/>"
 
     return html_block
 
 
 # Extract/find element
 def extract_element(find='title', html_content=''):
-
-    #Re #106, be sure to handle when its not found
+    # Re #106, be sure to handle when its not found
     element_text = None
 
     soup = BeautifulSoup(html_content, 'html.parser')
@@ -44,9 +45,10 @@ def extract_element(find='title', html_content=''):
 
     return element_text
 
+
 #
 def _parse_json(json_data, jsonpath_filter):
-    s=[]
+    s = []
     jsonpath_expression = parse(jsonpath_filter.replace('json:', ''))
     match = jsonpath_expression.find(json_data)
 
@@ -68,8 +70,8 @@ def _parse_json(json_data, jsonpath_filter):
 
     return stripped_text_from_html
 
-def extract_json_as_string(content, jsonpath_filter):
 
+def extract_json_as_string(content, jsonpath_filter):
     stripped_text_from_html = False
 
     # Try to parse/filter out the JSON, if we get some parser error, then maybe it's embedded <script type=ldjson>
@@ -89,7 +91,7 @@ def extract_json_as_string(content, jsonpath_filter):
             # Skip empty tags, and things that dont even look like JSON
             if not result.string or not '{' in result.string:
                 continue
-                
+
             try:
                 json_data = json.loads(result.string)
             except json.JSONDecodeError:
@@ -105,6 +107,7 @@ def extract_json_as_string(content, jsonpath_filter):
         return ''
 
     return stripped_text_from_html
+
 
 # Mode     - "content" return the content without the matches (default)
 #          - "line numbers" return a list of line numbers that match (int list)
@@ -144,8 +147,6 @@ def strip_ignore_text(content, wordlist, mode="content"):
                 output.append(line.encode('utf8'))
             else:
                 ignored_line_numbers.append(i)
-
-
 
     # Used for finding out what to highlight
     if mode == "line numbers":

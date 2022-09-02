@@ -2,6 +2,7 @@
 
 import difflib
 
+
 # like .compare but a little different output
 def customSequenceMatcher(before, after, include_equal=False):
     cruncher = difflib.SequenceMatcher(isjunk=lambda x: x in " \\t", a=before, b=after)
@@ -19,6 +20,7 @@ def customSequenceMatcher(before, after, include_equal=False):
         elif tag == 'insert':
             g = "(added) {}".format(after[blo])
             yield g
+
 
 # only_differences - only return info about the differences, no context
 # line_feed_sep could be "<br/>" or "<li>" or "\n" etc

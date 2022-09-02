@@ -19,18 +19,19 @@ valid_notification_formats = {
 }
 
 default_notification_format = 'Text'
-default_notification_body = 'Reservation found!\n---\nRestaurant: {restaurant}\nDate: {search_date}\nSearch Time: {search_time}\nParty Size: {party_size}\n---\n{found_reservations}\n---'
+default_notification_body = 'Reservation found!\n---\nRestaurant: {restaurant}\nDate: {search_date}\nSearch Time: {' \
+                            'search_time}\nParty Size: {party_size}\n---\n{found_reservations}\n--- '
 default_notification_title = 'ADRFinder Notification - {restaurant} / {search_date}'
 
-def process_notification(n_object, datastore):
 
+def process_notification(n_object, datastore):
     apobj = apprise.Apprise(debug=True)
 
     print(">> Processing notification")
 
     for url in n_object['notification_urls']:
         url = url.strip()
-        print (">> Process Notification: AppRise notifying {}".format(url))
+        print(">> Process Notification: AppRise notifying {}".format(url))
         apobj.add(url)
 
     # Get the notification body from datastore
@@ -40,7 +41,6 @@ def process_notification(n_object, datastore):
         n_object['notification_format'],
         valid_notification_formats[default_notification_format],
     )
-
 
     # Insert variables into the notification content
     notification_parameters = create_notification_parameters(n_object, datastore)
@@ -57,15 +57,14 @@ def process_notification(n_object, datastore):
 
     with apprise.LogCapture(level=apprise.logging.DEBUG) as logs:
         apobj.notify(
-        body=n_body,
-        title=n_title,
-        body_format=n_format)
+            body=n_body,
+            title=n_title,
+            body_format=n_format)
 
         # Returns empty string if nothing found, multi-line string otherwise
         log_value = logs.getvalue()
         if log_value and 'WARNING' in log_value or 'ERROR' in log_value:
             raise Exception(log_value)
-
 
 
 # Notification title + body content parameters get created here.
@@ -88,10 +87,8 @@ def create_notification_parameters(n_object, datastore):
     if base_url == '':
         base_url = "<base-url-env-var-not-set>"
 
-
     # Not sure deepcopy is needed here, but why not
     tokens = deepcopy(valid_tokens)
-
 
     # Valid_tokens also used as a field validator
     tokens.update(

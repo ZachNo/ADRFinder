@@ -12,6 +12,7 @@ import os
 
 from adrfinder.notification import default_notification_format, default_notification_body, default_notification_title
 
+
 # Is there an existing library to ensure some data store (JSON etc) is in sync with CRUD methods?
 # Open a github issue if you know something :)
 # https://stackoverflow.com/questions/6190468/how-to-trigger-function-on-value-change
@@ -31,8 +32,10 @@ class ADRFinderStore:
             'watching': {},
             'settings': {
                 'headers': {
-                    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                                  'Chrome/87.0.4280.66 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,'
+                              'image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
                     'Accept-Encoding': 'gzip, deflate',  # No support for brolti in python requests yet.
                     'Accept-Language': 'en-GB,en-US;q=0.9,en;'
                 },
@@ -44,8 +47,8 @@ class ADRFinderStore:
                 },
                 'application': {
                     'password': False,
-                    'base_url' : None,
-                    'notification_urls': [], # Apprise URL list
+                    'base_url': None,
+                    'notification_urls': [],  # Apprise URL list
                     # Custom notification content
                     'notification_title': default_notification_title,
                     'notification_body': default_notification_body,
@@ -92,7 +95,7 @@ class ADRFinderStore:
             'method': 'GET',
             'history': {},  # Dict of timestamp and output stripped filename
             # Custom notification content
-            'notification_urls': [], # List of URLs to add to the notification Queue (Usually AppRise)
+            'notification_urls': [],  # List of URLs to add to the notification Queue (Usually AppRise)
             'notification_title': default_notification_title,
             'notification_body': default_notification_body,
             'notification_format': default_notification_format,
@@ -132,9 +135,8 @@ class ADRFinderStore:
                     if 'restaurants' in from_disk['cache']:
                         self.__data['cache']['restaurants'].update(from_disk['cache']['restaurants'])
 
-
-                # Reinitialise each `watching` with our generic_definition in the case that we add a new var in the future.
-                # @todo pretty sure theres a python we todo this with an abstracted(?) object!
+                # Reinitialise each `watching` with our generic_definition in the case that we add a new var in the
+                # future. @todo pretty sure theres a python we todo this with an abstracted(?) object!
                 for uuid, watch in self.__data['watching'].items():
                     _blank = deepcopy(self.generic_definition)
                     _blank.update(watch)
@@ -149,12 +151,9 @@ class ADRFinderStore:
 
         self.__data['version_tag'] = version_tag
 
-        # Convert date to datetime object
-        #for uuid, v in self.__data['watching'].items():
-        #    print(">> Converting date")
-        #    print(self.__data['watching'][uuid]['date'])
-        #    self.__data['watching'][uuid]['date'] = datetime.datetime.strptime(self.__data['watching'][uuid]['date'], '%Y-%m-%d').date()
-
+        # Convert date to datetime object for uuid, v in self.__data['watching'].items(): print(">> Converting date")
+        # print(self.__data['watching'][uuid]['date']) self.__data['watching'][uuid]['date'] =
+        # datetime.datetime.strptime(self.__data['watching'][uuid]['date'], '%Y-%m-%d').date()
 
         # Helper to remove password protection
         password_reset_lockfile = "{}/removepassword.lock".format(self.datastore_path)
@@ -250,9 +249,9 @@ class ADRFinderStore:
                 has_unviewed = True
 
         # Re #152, Return env base_url if not overriden, @todo also prefer the proxy pass url
-        env_base_url = os.getenv('BASE_URL','')
+        env_base_url = os.getenv('BASE_URL', '')
         if not self.__data['settings']['application']['base_url']:
-          self.__data['settings']['application']['base_url'] = env_base_url.strip('" ')
+            self.__data['settings']['application']['base_url'] = env_base_url.strip('" ')
 
         self.__data['has_unviewed'] = has_unviewed
 
@@ -296,13 +295,15 @@ class ADRFinderStore:
         search_time = self.data['watching'][uuid]['search_time']
         tag = self.data['watching'][uuid]['tag']
         extras = self.data['watching'][uuid]
-        new_uuid = self.add_watch(restaurant=restaurant, date=date, party_size=party_size, search_time=search_time, tag=tag, extras=extras)
+        new_uuid = self.add_watch(restaurant=restaurant, date=date, party_size=party_size, search_time=search_time,
+                                  tag=tag, extras=extras)
 
         return new_uuid
 
     def watch_exists(self, restaurant, date, party_size, search_time):
         for watch in self.data['watching'].values():
-            if watch['restaurant'] == restaurant and watch['date'] == date and watch['party_size'] == party_size and watch['search_time'] == search_time:
+            if watch['restaurant'] == restaurant and watch['date'] == date and watch['party_size'] == party_size and \
+                    watch['search_time'] == search_time:
                 return True
 
         return False
@@ -321,7 +322,7 @@ class ADRFinderStore:
         return self.data['watching'][uuid].get(val)
 
     # Remove a watchs data but keep the entry (URL etc)
-    def scrub_watch(self, uuid, limit_timestamp = False):
+    def scrub_watch(self, uuid, limit_timestamp=False):
 
         import hashlib
         del_timestamps = []
@@ -338,7 +339,6 @@ class ADRFinderStore:
             self.data['watching'][uuid]['last_checked'] = 0
             self.data['watching'][uuid]['last_changed'] = 0
             self.data['watching'][uuid]['previous_md5'] = ""
-
 
         for timestamp in del_timestamps:
             del self.data['watching'][uuid]['history'][str(timestamp)]
@@ -380,7 +380,8 @@ class ADRFinderStore:
 
             # Incase these are copied across, assume it's a reference and deepcopy()
             apply_extras = deepcopy(extras)
-            for k in ['uuid', 'history', 'last_checked', 'last_changed', 'newest_history_key', 'previous_md5', 'viewed']:
+            for k in ['uuid', 'history', 'last_checked', 'last_changed', 'newest_history_key', 'previous_md5',
+                      'viewed']:
                 if k in apply_extras:
                     del apply_extras[k]
 
@@ -416,7 +417,7 @@ class ADRFinderStore:
         except RuntimeError as e:
             # Try again in 15 seconds
             time.sleep(15)
-            logging.error ("! Data changed when writing to JSON, trying again.. %s", str(e))
+            logging.error("! Data changed when writing to JSON, trying again.. %s", str(e))
             self.sync_to_json()
             return
         else:
@@ -425,9 +426,9 @@ class ADRFinderStore:
                 # Re #286  - First write to a temp file, then confirm it looks OK and rename it
                 # This is a fairly basic strategy to deal with the case that the file is corrupted,
                 # system was out of memory, out of RAM etc
-                with open(self.json_store_path+".tmp", 'w') as json_file:
+                with open(self.json_store_path + ".tmp", 'w') as json_file:
                     json.dump(data, json_file, indent=4)
-                os.rename(self.json_store_path+".tmp", self.json_store_path)
+                os.rename(self.json_store_path + ".tmp", self.json_store_path)
             except Exception as e:
                 logging.error("Error writing JSON!! (Main JSON file save was skipped) : %s", str(e))
 
@@ -451,4 +452,3 @@ class ADRFinderStore:
                 time.sleep(2)
                 if self.stop_thread:
                     break
-

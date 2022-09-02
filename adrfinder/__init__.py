@@ -68,7 +68,6 @@ app.config['LOGIN_DISABLED'] = False
 # Disables caching of the templates
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
-
 notification_debug_log = []
 
 
@@ -152,7 +151,6 @@ class User(flask_login.UserMixin):
 
     # Compare given password against JSON store or Env var
     def check_password(self, password):
-
         import base64
         import hashlib
 
@@ -227,7 +225,7 @@ def adrfinder_app(config=None, datastore_o=None):
 
         password = request.form.get('password')
 
-        if (user.check_password(password)):
+        if user.check_password(password):
             flask_login.login_user(user, remember=True)
 
             # For now there's nothing else interesting here other than the index/list page
@@ -252,7 +250,8 @@ def adrfinder_app(config=None, datastore_o=None):
 
         # Disable password login if there is not one set
         # (No password in settings or env var)
-        app.config['LOGIN_DISABLED'] = datastore.data['settings']['application']['password'] == False and os.getenv("SALTED_PASS", False) == False
+        app.config['LOGIN_DISABLED'] = datastore.data['settings']['application']['password'] == False and os.getenv(
+            "SALTED_PASS", False) == False
 
         # For the RSS path, allow access via a token
         if request.path == '/rss' and request.args.get('token'):
@@ -273,7 +272,7 @@ def adrfinder_app(config=None, datastore_o=None):
         # @todo needs a .itemsWithTag() or something
         for uuid, watch in datastore.data['watching'].items():
 
-            if limit_tag != None:
+            if limit_tag is not None:
                 # Support for comma separated list of tags.
                 for tag_in_watch in watch['tag'].split(','):
                     tag_in_watch = tag_in_watch.strip()
@@ -298,8 +297,8 @@ def adrfinder_app(config=None, datastore_o=None):
                 guid = "{}/{}".format(watch['uuid'], watch['last_changed'])
                 fe = fg.add_entry()
 
-                # Include a link to the diff page, they will have to login here to see if password protection is enabled.
-                # Description is the page you watch, link takes you to the diff JS UI page
+                # Include a link to the diff page, they will have to login here to see if password protection is
+                # enabled. Description is the page you watch, link takes you to the diff JS UI page
                 base_url = datastore.data['settings']['application']['base_url']
                 if base_url == '':
                     base_url = "<base-url-env-var-not-set>"
@@ -309,9 +308,10 @@ def adrfinder_app(config=None, datastore_o=None):
                 rest_and_times = get_restaurants_and_times()
                 # @todo use title if it exists
                 fe.link(link=hist_link)
-                title = rest_and_times['restaurants'][watch['restaurant']] + " - " + datetime.datetime.strptime(watch['date'], '%Y-%m-%d').date().strftime('%m/%d/%Y') + " - " + rest_and_times['search_times'][watch['search_time']]
+                title = rest_and_times['restaurants'][watch['restaurant']] + " - " + datetime.datetime.strptime(
+                    watch['date'], '%Y-%m-%d').date().strftime('%m/%d/%Y') + " - " + rest_and_times['search_times'][
+                            watch['search_time']]
                 fe.title(title=title)
-
 
                 # @todo in the future <description><![CDATA[<html><body>Any code html is valid.</body></html>]]></description>
                 fe.description(description=title)
@@ -340,7 +340,7 @@ def adrfinder_app(config=None, datastore_o=None):
                 datastore.data['watching'][pause_uuid]['paused'] ^= True
                 datastore.needs_write = True
 
-                return redirect(url_for('index', tag = limit_tag))
+                return redirect(url_for('index', tag=limit_tag))
             except KeyError:
                 pass
 
@@ -352,20 +352,20 @@ def adrfinder_app(config=None, datastore_o=None):
 
             watch['restaurant_name'] = rest_and_times['restaurants'][watch['restaurant']]
             watch['search_time_formatted'] = rest_and_times['search_times'][watch['search_time']]
-            watch['date_formatted']  = datetime.datetime.strptime(watch['date'], '%Y-%m-%d').date().strftime('%m/%d/%Y')
+            watch['date_formatted'] = datetime.datetime.strptime(watch['date'], '%Y-%m-%d').date().strftime('%m/%d/%Y')
 
             watch['expired'] = False
             if watch['date'] < datetime.datetime.today().strftime('%Y-%m-%d'):
                 watch['expired'] = True
 
-            if watch['paused'] == True and watch['paused_until']:
+            if watch['paused'] and watch['paused_until']:
                 timediff = watch['paused_until'] - int(datetime.datetime.now().timestamp())
                 if timediff >= 3600:
-                    watch['paused_for'] = "{} hours".format(int(timediff/3600))
+                    watch['paused_for'] = "{} hours".format(int(timediff / 3600))
                 else:
-                    watch['paused_for'] = "{} minutes".format(int(timediff/60))
+                    watch['paused_for'] = "{} minutes".format(int(timediff / 60))
 
-            if limit_tag != None:
+            if limit_tag is not None:
                 # Support for comma separated list of tags.
                 for tag_in_watch in watch['tag'].split(','):
                     tag_in_watch = tag_in_watch.strip()
@@ -403,7 +403,6 @@ def adrfinder_app(config=None, datastore_o=None):
 
         return output
 
-
     @app.route("/edit/<string:uuid>", methods=['GET', 'POST'])
     @login_required
     def edit_page(uuid):
@@ -414,7 +413,6 @@ def adrfinder_app(config=None, datastore_o=None):
         if uuid == 'first':
             uuid = list(datastore.data['watching'].keys()).pop()
 
-
         if request.method == 'GET':
             if not uuid in datastore.data['watching']:
                 flash("No watch with the UUID %s found." % (uuid), "error")
@@ -422,10 +420,10 @@ def adrfinder_app(config=None, datastore_o=None):
 
             populate_form_from_watch(form, datastore.data['watching'][uuid])
 
-
         if request.method == 'POST' and form.validate():
 
-            # Re #110, if they submit the same as the default value, set it to None, so we continue to follow the default
+            # Re #110, if they submit the same as the default value, set it to None, so we continue to follow the
+            # default
             if form.minutes_between_check.data == datastore.data['settings']['requests']['minutes_between_check']:
                 form.minutes_between_check.data = None
 
@@ -485,13 +483,13 @@ def adrfinder_app(config=None, datastore_o=None):
 
             # Re #110 offer the default minutes
             using_default_minutes = False
-            if form.minutes_between_check.data == None:
+            if form.minutes_between_check.data is None:
                 form.minutes_between_check.data = datastore.data['settings']['requests']['minutes_between_check']
                 using_default_minutes = True
 
             # Re #110 offer the default pause
             using_default_pause = False
-            if form.pause_length.data == None:
+            if form.pause_length.data is None:
                 form.pause_length.data = datastore.data['settings']['application']['pause_length']
                 using_default_pause = True
 
@@ -504,7 +502,7 @@ def adrfinder_app(config=None, datastore_o=None):
                                      form=form,
                                      using_default_minutes=using_default_minutes,
                                      using_default_pause=using_default_pause,
-                                     current_base_url = datastore.data['settings']['application']['base_url']
+                                     current_base_url=datastore.data['settings']['application']['base_url']
                                      )
 
         return output
@@ -576,7 +574,7 @@ def adrfinder_app(config=None, datastore_o=None):
 
         output = render_template("settings.html",
                                  form=form,
-                                 current_base_url = datastore.data['settings']['application']['base_url'],
+                                 current_base_url=datastore.data['settings']['application']['base_url'],
                                  hide_remove_pass=os.getenv("SALTED_PASS", False))
 
         return output
@@ -680,15 +678,16 @@ def adrfinder_app(config=None, datastore_o=None):
 
         return output
 
-
     @app.route("/settings/notification-logs", methods=['GET'])
     @login_required
     def notification_logs():
         global notification_debug_log
         output = render_template("notification-log.html",
-                                 logs=notification_debug_log if len(notification_debug_log) else ["No errors or warnings detected"])
+                                 logs=notification_debug_log if len(notification_debug_log) else [
+                                     "No errors or warnings detected"])
 
         return output
+
     @app.route("/api/<string:uuid>/snapshot/current", methods=['GET'])
     @login_required
     def api_snapshot(uuid):
@@ -742,12 +741,14 @@ def adrfinder_app(config=None, datastore_o=None):
             datastore.sync_to_json()
 
             # Add the index
-            zipObj.write(os.path.join(datastore_o.datastore_path, "restaurant-watches.json"), arcname="restaurant-watches.json")
+            zipObj.write(os.path.join(datastore_o.datastore_path, "restaurant-watches.json"),
+                         arcname="restaurant-watches.json")
 
             # Add the flask app secret
             zipObj.write(os.path.join(datastore_o.datastore_path, "secret.txt"), arcname="secret.txt")
 
-            # Add any snapshot data we find, use the full path to access the file, but make the file 'relative' in the Zip.
+            # Add any snapshot data we find, use the full path to access the file, but make the file 'relative' in
+            # the Zip.
             for txt_file_path in Path(datastore_o.datastore_path).rglob('*.txt'):
                 parent_p = txt_file_path.parent
                 if parent_p.name in uuids:
@@ -785,7 +786,8 @@ def adrfinder_app(config=None, datastore_o=None):
                 return redirect(url_for('index'))
 
             # @todo add_watch should throw a custom Exception for validation etc
-            new_uuid = datastore.add_watch(restaurant=restaurant, date=date, party_size=party_size, search_time=search_time, tag=request.form.get('tag').strip())
+            new_uuid = datastore.add_watch(restaurant=restaurant, date=date, party_size=party_size,
+                                           search_time=search_time, tag=request.form.get('tag').strip())
             # Straight into the queue.
             update_q.put(new_uuid)
 
@@ -837,10 +839,10 @@ def adrfinder_app(config=None, datastore_o=None):
                 update_q.put(uuid)
             i = 1
 
-        elif tag != None:
+        elif tag is not None:
             # Items that have this current tag
             for watch_uuid, watch in datastore.data['watching'].items():
-                if (tag != None and tag in watch['tag']):
+                if tag is not None and tag in watch['tag']:
                     if watch_uuid not in running_uuids and not datastore.data['watching'][watch_uuid]['paused']:
                         update_q.put(watch_uuid)
                         i += 1
@@ -886,15 +888,16 @@ def check_for_new_version():
         except:
             pass
 
-        try: # If we have a new version, show it
+        try:  # If we have a new version, show it
             if gh_json['tag_name'] != adrfinder.__version__:
-                #flash("New version available: {}".format(json['tag_name']))
+                # flash("New version available: {}".format(json['tag_name']))
                 app.config['NEW_VERSION_AVAILABLE'] = True
         except:
             pass
 
         # Check daily
         app.config.exit.wait(86400)
+
 
 def notification_runner():
     global notification_debug_log
@@ -917,15 +920,15 @@ def notification_runner():
                 # UUID wont be present when we submit a 'test' from the global settings
                 if 'uuid' in n_object:
                     datastore.update_watch(uuid=n_object['uuid'],
-                                           update_obj={'last_notification_error': "Notification error detected, please see logs."})
+                                           update_obj={
+                                               'last_notification_error': "Notification error detected, please see "
+                                                                          "logs."})
 
                 log_lines = str(e).splitlines()
                 notification_debug_log += log_lines
 
                 # Trim the log length
                 notification_debug_log = notification_debug_log[-100:]
-
-
 
 
 # Thread runner to check every minute, look for new watches to feed into the Queue.
@@ -1007,7 +1010,6 @@ def ticker_thread_check_time_launch_checks():
 
 
 def get_restaurants_and_times():
-
     rest_refresh = datastore.data['settings']['requests']['minutes_before_restaurant_refresh']
     rest_last_updated = datastore.data['cache']['restaurants']['last_updated']
     if type(rest_last_updated) != int:
@@ -1025,7 +1027,7 @@ def get_restaurants_and_times():
         datastore.data['cache']['restaurants']['last_updated'] = int(time.time())
         datastore.needs_write = True
     else:
-        rest_and_times = {'restaurants': datastore.data['cache']['restaurants']['data'], 'search_times': datastore.data['cache']['restaurants']['times']}
-
+        rest_and_times = {'restaurants': datastore.data['cache']['restaurants']['data'],
+                          'search_times': datastore.data['cache']['restaurants']['times']}
 
     return rest_and_times

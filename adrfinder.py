@@ -12,6 +12,7 @@ import adrfinder
 
 from adrfinder import store
 
+
 def main():
     ssl_mode = False
     host = ''
@@ -62,15 +63,15 @@ def main():
         if create_datastore_dir:
             os.mkdir(app_config['datastore_path'])
         else:
-            print ("ERROR: Directory path for the datastore '{}' does not exist, cannot start, please make sure the directory exists.\n"
-                   "Alternatively, use the -C parameter.".format(app_config['datastore_path']),file=sys.stderr)
+            print(
+                "ERROR: Directory path for the datastore '{}' does not exist, cannot start, please make sure the directory exists.\n"
+                "Alternatively, use the -C parameter.".format(app_config['datastore_path']), file=sys.stderr)
             sys.exit(2)
 
     datastore = store.ADRFinderStore(datastore_path=app_config['datastore_path'], version_tag=adrfinder.__version__)
     app = adrfinder.adrfinder_app(app_config, datastore)
 
     app.config['datastore_path'] = datastore_path
-
 
     @app.context_processor
     def inject_version():
@@ -87,7 +88,7 @@ def main():
     #         proxy_set_header X-Forwarded-Prefix /app;
 
     if os.getenv('USE_X_SETTINGS'):
-        print ("USE_X_SETTINGS is ENABLED\n")
+        print("USE_X_SETTINGS is ENABLED\n")
         from werkzeug.middleware.proxy_fix import ProxyFix
         app.wsgi_app = ProxyFix(app.wsgi_app, x_prefix=1, x_host=1)
 

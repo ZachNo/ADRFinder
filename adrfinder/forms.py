@@ -1,4 +1,5 @@
-from wtforms import Form, SelectField, RadioField, BooleanField, StringField, PasswordField, validators, IntegerField, fields, TextAreaField, \
+from wtforms import Form, SelectField, RadioField, BooleanField, StringField, PasswordField, validators, IntegerField, \
+    fields, TextAreaField, \
     Field
 
 from wtforms import widgets, SubmitField
@@ -11,9 +12,11 @@ from datetime import datetime, timedelta
 from markupsafe import Markup
 from wtforms.widgets.core import html_params
 
-from adrfinder.notification import default_notification_format, valid_notification_formats, default_notification_body, default_notification_title
+from adrfinder.notification import default_notification_format, valid_notification_formats, default_notification_body, \
+    default_notification_title
 
 default_method = 'GET'
+
 
 class CustomSelect:
     """
@@ -63,7 +66,6 @@ class StringListField(StringField):
             p = 1
         else:
             self.data = []
-
 
 
 class SaltyPasswordField(StringField):
@@ -122,10 +124,12 @@ class StringDictKeyValue(StringField):
         else:
             self.data = {}
 
+
 class ValidateContentFetcherIsReady(object):
     """
     Validates that anything that looks like a regex passes as a regex
     """
+
     def __init__(self, message=None):
         self.message = message
 
@@ -144,11 +148,14 @@ class ValidateContentFetcherIsReady(object):
                 driver_url = some_object.command_executor
                 message = field.gettext('Content fetcher \'%s\' did not respond.' % (field.data))
                 message += '<br/>' + field.gettext(
-                    'Be sure that the selenium/webdriver runner is running and accessible via network from this container/host.')
+                    'Be sure that the selenium/webdriver runner is running and accessible via network from this '
+                    'container/host.')
                 message += '<br/>' + field.gettext('Did you follow the instructions in the wiki?')
                 message += '<br/><br/>' + field.gettext('WebDriver Host: %s' % (driver_url))
-                message += '<br/><a href="https://github.com/chuckmac/adrfinder/wiki/Fetching-pages-with-WebDriver">Go here for more information</a>'
-                message += '<br/>'+field.gettext('Content fetcher did not respond properly, unable to use it.\n %s' % (str(e)))
+                message += '<br/><a href="https://github.com/chuckmac/adrfinder/wiki/Fetching-pages-with-WebDriver' \
+                           '">Go here for more information</a> '
+                message += '<br/>' + field.gettext(
+                    'Content fetcher did not respond properly, unable to use it.\n %s' % (str(e)))
 
                 raise ValidationError(message)
 
@@ -172,6 +179,7 @@ class ValidateNotificationBodyAndTitleWhenURLisSet(object):
                 message = field.gettext('Notification Body and Title is required when a Notification URL is used')
                 raise ValidationError(message)
 
+
 class ValidateAppRiseServers(object):
     """
        Validates that each URL given is compatible with AppRise
@@ -189,10 +197,12 @@ class ValidateAppRiseServers(object):
                 message = field.gettext('\'%s\' is not a valid AppRise URL.' % (server_url))
                 raise ValidationError(message)
 
+
 class ValidateTokensList(object):
     """
     Validates that a {token} is from a valid set
     """
+
     def __init__(self, message=None):
         self.message = message
 
@@ -204,59 +214,87 @@ class ValidateTokensList(object):
                 message = field.gettext('Token \'%s\' is not a valid token.')
                 raise ValidationError(message % (p))
 
+
 class ValidateSelectOption(object):
     """
     Validates that a {token} is from a valid set
     """
+
     def __init__(self, message=None):
         self.message = message
 
     def __call__(self, form, field):
-         if field.data == "None":
+        if field.data == "None":
             message = field.gettext('Please select a restaurant.')
             raise ValidationError(message)
+
+
 class quickWatchForm(Form):
     # https://wtforms.readthedocs.io/en/2.3.x/fields/#module-wtforms.fields.html5
     # `require_tld` = False is needed even for the test harness "http://localhost:5005.." to run
     tag = StringField('Group tag', [validators.Optional(), validators.Length(max=35)])
     rest_and_times = get_restaurants_and_times()
     restaurants = rest_and_times['restaurants']
-    
+
     choices = [(k, v) for k, v in rest_and_times['restaurants'].items()]
     choices.insert(0, ("None", "Select a restaurant"))
 
-    restaurant = SelectField(u'Restaurant', choices=choices, validators=[InputRequired(), ValidateSelectOption()], widget=CustomSelect())
-    date = html5.DateField(u'Date', render_kw={'min': datetime.today().strftime('%Y-%m-%d'), 'max': (datetime.today() + timedelta(days=90)).strftime('%Y-%m-%d')}, validators=[InputRequired(), DateRange(min=datetime.today().date(), max=(datetime.today().date() + timedelta(days=90)))])
-    party_size = SelectField(u'Party Size', choices=[('1', '1 Person'), ('2', '2 People'), ('3', '3 People'), ('4', '4 People'), ('5', '5 People'), ('6', '6 People'), ('7', '7 People'), ('8', '8 People'), ('9', '9 People'), ('10', '10 People')], default="4",  validators=[InputRequired()])
+    restaurant = SelectField(u'Restaurant', choices=choices, validators=[InputRequired(), ValidateSelectOption()],
+                             widget=CustomSelect())
+    date = html5.DateField(u'Date', render_kw={'min': datetime.today().strftime('%Y-%m-%d'),
+                                               'max': (datetime.today() + timedelta(days=90)).strftime('%Y-%m-%d')},
+                           validators=[InputRequired(), DateRange(min=datetime.today().date(),
+                                                                  max=(datetime.today().date() + timedelta(days=90)))])
+    party_size = SelectField(u'Party Size',
+                             choices=[('1', '1 Person'), ('2', '2 People'), ('3', '3 People'), ('4', '4 People'),
+                                      ('5', '5 People'), ('6', '6 People'), ('7', '7 People'), ('8', '8 People'),
+                                      ('9', '9 People'), ('10', '10 People')], default="4",
+                             validators=[InputRequired()])
     choices = [(k, v) for k, v in rest_and_times['search_times'].items()]
     search_time = SelectField(u'Search Time', choices=choices, validators=[InputRequired()])
 
-class commonSettingsForm(Form):
 
-    notification_urls = StringListField('Notification URL List', validators=[validators.Optional(), ValidateNotificationBodyAndTitleWhenURLisSet(), ValidateAppRiseServers()])
-    notification_title = StringField('Notification Title', default=default_notification_title, validators=[validators.Optional(), ValidateTokensList()])
-    notification_body = TextAreaField('Notification Body', default=default_notification_body, validators=[validators.Optional(), ValidateTokensList()])
-    notification_format = SelectField('Notification Format', choices=valid_notification_formats.keys(), default=default_notification_format)
+class commonSettingsForm(Form):
+    notification_urls = StringListField('Notification URL List', validators=[validators.Optional(),
+                                                                             ValidateNotificationBodyAndTitleWhenURLisSet(),
+                                                                             ValidateAppRiseServers()])
+    notification_title = StringField('Notification Title', default=default_notification_title,
+                                     validators=[validators.Optional(), ValidateTokensList()])
+    notification_body = TextAreaField('Notification Body', default=default_notification_body,
+                                      validators=[validators.Optional(), ValidateTokensList()])
+    notification_format = SelectField('Notification Format', choices=valid_notification_formats.keys(),
+                                      default=default_notification_format)
     trigger_check = BooleanField('Send test notification on save')
 
-class watchForm(commonSettingsForm):
 
+class watchForm(commonSettingsForm):
     tag = StringField('Group tag', [validators.Optional(), validators.Length(max=35)])
     rest_and_times = get_restaurants_and_times()
     restaurants = rest_and_times['restaurants']
-    
+
     choices = [(k, v) for k, v in rest_and_times['restaurants'].items()]
     choices.insert(0, ("None", "Select a restaurant"))
 
-    restaurant = SelectField(u'Restaurant', choices=choices, validators=[InputRequired(), ValidateSelectOption()], widget=CustomSelect())
-    date = html5.DateField(u'Date', render_kw={'min': datetime.today().strftime('%Y-%m-%d'), 'max': (datetime.today() + timedelta(days=90)).strftime('%Y-%m-%d')}, validators=[InputRequired(), DateRange(min=datetime.today().date(), max=(datetime.today().date() + timedelta(days=90)))])
-    party_size = SelectField(u'Party Size', choices=[('1', '1 Person'), ('2', '2 People'), ('3', '3 People'), ('4', '4 People'), ('5', '5 People'), ('6', '6 People'), ('7', '7 People'), ('8', '8 People'), ('9', '9 People'), ('10', '10 People')], default="4",  validators=[InputRequired()])
+    restaurant = SelectField(u'Restaurant', choices=choices, validators=[InputRequired(), ValidateSelectOption()],
+                             widget=CustomSelect())
+    date = html5.DateField(u'Date', render_kw={'min': datetime.today().strftime('%Y-%m-%d'),
+                                               'max': (datetime.today() + timedelta(days=90)).strftime('%Y-%m-%d')},
+                           validators=[InputRequired(), DateRange(min=datetime.today().date(),
+                                                                  max=(datetime.today().date() + timedelta(days=90)))])
+    party_size = SelectField(u'Party Size',
+                             choices=[('1', '1 Person'), ('2', '2 People'), ('3', '3 People'), ('4', '4 People'),
+                                      ('5', '5 People'), ('6', '6 People'), ('7', '7 People'), ('8', '8 People'),
+                                      ('9', '9 People'), ('10', '10 People')], default="4",
+                             validators=[InputRequired()])
     choices = [(k, v) for k, v in rest_and_times['search_times'].items()]
     search_time = SelectField(u'Search Time', choices=choices, validators=[InputRequired()])
-    
+
     minutes_between_check = html5.IntegerField('Maximum time in minutes until recheck',
                                                [validators.Optional(), validators.NumberRange(min=1)])
-    pause_length = SelectField('Pause After Notification', choices=[(0, 'Until Restarted'), ('15', '15 minutes'), ('30', '30 minutes'), ('60', '1 hour'), ('480', '8 hours'), ('1440', '1 day') ], validators=[validators.Optional()])
+    pause_length = SelectField('Pause After Notification',
+                               choices=[(0, 'Until Restarted'), ('15', '15 minutes'), ('30', '30 minutes'),
+                                        ('60', '1 hour'), ('480', '8 hours'), ('1440', '1 day')],
+                               validators=[validators.Optional()])
     title = StringField('Title')
 
     save_button = SubmitField('Save', render_kw={"class": "pure-button pure-button-primary"})
@@ -270,10 +308,13 @@ class watchForm(commonSettingsForm):
 
         return result
 
-class globalSettingsForm(commonSettingsForm):
 
+class globalSettingsForm(commonSettingsForm):
     password = SaltyPasswordField()
     minutes_between_check = html5.IntegerField('Maximum time in minutes until recheck',
                                                [validators.NumberRange(min=1)])
     base_url = StringField('Base URL', validators=[validators.Optional()])
-    pause_length = SelectField(U'Pause After Notification', choices=[(0, 'Until Restarted'), ('15', '15 minutes'), ('30', '30 minutes'), ('60', '1 hour'), ('480', '8 hours'), ('1440', '1 day') ], default="0", validators=[validators.Optional()])
+    pause_length = SelectField(U'Pause After Notification',
+                               choices=[(0, 'Until Restarted'), ('15', '15 minutes'), ('30', '30 minutes'),
+                                        ('60', '1 hour'), ('480', '8 hours'), ('1440', '1 day')], default="0",
+                               validators=[validators.Optional()])

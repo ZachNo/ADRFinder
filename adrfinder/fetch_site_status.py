@@ -9,7 +9,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 # Some common stuff here that can be moved to a base class
-class perform_site_check():
+class perform_site_check:
 
     def __init__(self, *args, datastore, **kwargs):
         super().__init__(*args, **kwargs)
@@ -24,14 +24,15 @@ class perform_site_check():
         refresh_time = self.datastore.data['cache']['auth']['auth_token_expiry']
         if type(refresh_time) != int:
             refresh_time = 0
-        refresh_time = refresh_time - 60 ## 60 second buffer
+        refresh_time = refresh_time - 60  # 60 second buffer
 
         header = ''
         user_agent = "ADRFinder/0.1 (1.4.1/8a21c5927a273a038fb3b66ec29c86425e871b11)"
 
         if refresh_time == '' or refresh_time <= int(time.time()):
             url = "https://disneyworld.disney.go.com/authentication/get-client-token"
-            request_headers = {"User-Agent":user_agent,"Content-Type":"application/json","Accept":"multipart/related"}
+            request_headers = {"User-Agent": user_agent, "Content-Type": "application/json",
+                               "Accept": "multipart/related"}
 
             r = requests.get(url, headers=request_headers, verify=False)
             response = json.loads(r.content)
@@ -39,14 +40,13 @@ class perform_site_check():
             expires = datetime.now() + timedelta(seconds=response['expires_in'])
             self.datastore.update_auth(response['access_token'], int(expires.timestamp()))
 
-            header = {"Authorization":"BEARER " + response['access_token'], "User-Agent":user_agent}
+            header = {"Authorization": "BEARER " + response['access_token'], "User-Agent": user_agent}
 
-        else: 
+        else:
             token = self.datastore.data['cache']['auth']['auth_token']
-            header = {"Authorization":"BEARER " + token, "User-Agent":user_agent}
+            header = {"Authorization": "BEARER " + token, "User-Agent": user_agent}
 
         return header
-
 
     def run(self, uuid):
 
@@ -64,7 +64,8 @@ class perform_site_check():
         request_header = self.get_auth_header()
         base_url = "https://api.wdpro.disney.go.com/explorer-service/public/finder/dining-availability/"
 
-        url = base_url + restaurant + "?searchDate=" + date + "&partySize=" + str(party_size) + "&mealPeriod=" + str(search_time)
+        url = base_url + restaurant + "?searchDate=" + date + "&partySize=" + str(party_size) + "&mealPeriod=" + str(
+            search_time)
 
         r = requests.get(url, headers=request_header, verify=False)
         data = json.loads(r.content)

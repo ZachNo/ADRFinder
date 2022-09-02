@@ -4,6 +4,7 @@ import time
 import datetime
 from . import get_restaurants_and_times
 
+
 # A single update worker
 #
 # Requests for checking on a single site(watch) from a queue of watches
@@ -39,8 +40,8 @@ class update_worker(threading.Thread):
                 if uuid in list(self.datastore.data['watching'].keys()):
 
                     available_detected = False
-                    ## Try to reset any errros
-                    data =  {'last_notification_error': False, 'last_error': False}
+                    # Try to reset any errors
+                    data = {'last_notification_error': False, 'last_error': False}
                     now = time.time()
 
                     try:
@@ -52,7 +53,7 @@ class update_worker(threading.Thread):
                         # Some kind of custom to-str handler in the exception handler that does this?
                         err_text = "EmptyReply: Status Code {}".format(e.status_code)
                         self.datastore.update_watch(uuid=uuid, data={'last_error': err_text,
-                                                                           'last_check_status': e.status_code})
+                                                                     'last_check_status': e.status_code})
                     except Exception as e:
                         self.app.logger.error("Exception reached processing watch UUID: %s - %s", uuid, str(e))
                         self.datastore.update_watch(uuid=uuid, data={'last_error': str(e)})
@@ -73,14 +74,15 @@ class update_worker(threading.Thread):
                             if available_detected:
 
                                 rest_and_times = get_restaurants_and_times()
-                                date_formatted  = datetime.datetime.strptime(watch['date'], '%Y-%m-%d').date().strftime('%m/%d/%Y')
+                                date_formatted = datetime.datetime.strptime(watch['date'], '%Y-%m-%d').date().strftime(
+                                    '%m/%d/%Y')
                                 restaurant_name = rest_and_times['restaurants'][watch['restaurant']]
                                 search_time = rest_and_times['search_times'][watch['search_time']]
 
                                 n_object = {}
-                                print (">> Availability detected in UUID {} - {} - {}".format(uuid, restaurant_name, date_formatted))
+                                print(">> Availability detected in UUID {} - {} - {}".format(uuid, restaurant_name,
+                                                                                             date_formatted))
                                 self.datastore.update_watch(uuid, {"history": {str(curr_date): offers}})
-
 
                                 dates = list(watch['history'].keys())
                                 # Convert to int, sort and back to str again
@@ -99,11 +101,17 @@ class update_worker(threading.Thread):
 
                                 # No? maybe theres a global setting, queue them all
                                 elif len(self.datastore.data['settings']['application']['notification_urls']):
-                                    print(">>> Watch notification URLs were empty, using GLOBAL notifications for UUID: {}".format(uuid))
-                                    n_object['notification_urls'] = self.datastore.data['settings']['application']['notification_urls']
-                                    n_object['notification_title'] = self.datastore.data['settings']['application']['notification_title']
-                                    n_object['notification_body'] = self.datastore.data['settings']['application']['notification_body']
-                                    n_object['notification_format'] = self.datastore.data['settings']['application']['notification_format']
+                                    print(
+                                        ">>> Watch notification URLs were empty, using GLOBAL notifications for UUID: "
+                                        "{}".format(uuid))
+                                    n_object['notification_urls'] = self.datastore.data['settings']['application'][
+                                        'notification_urls']
+                                    n_object['notification_title'] = self.datastore.data['settings']['application'][
+                                        'notification_title']
+                                    n_object['notification_body'] = self.datastore.data['settings']['application'][
+                                        'notification_body']
+                                    n_object['notification_format'] = self.datastore.data['settings']['application'][
+                                        'notification_format']
                                 else:
                                     print(">>> NO notifications queued, watch and global notification URLs were empty.")
 
@@ -119,7 +127,8 @@ class update_worker(threading.Thread):
                                     # Prepare the offer list
                                     found_reservations = ''
                                     for offer in offers:
-                                        found_reservations += "{} - {}{}{}".format(offer['time'], offer['url'], line_feed_sep, line_feed_sep)
+                                        found_reservations += "{} - {}{}{}".format(offer['time'], offer['url'],
+                                                                                   line_feed_sep, line_feed_sep)
 
                                     n_object.update({
                                         'uuid': uuid,
@@ -136,11 +145,13 @@ class update_worker(threading.Thread):
                                 if watch['pause_length'] is not None:
                                     self.datastore.pause_watch(uuid=uuid, pause=watch['pause_length'])
                                 elif self.datastore.data['settings']['application']['pause_length'] is not None:
-                                    self.datastore.pause_watch(uuid=uuid, pause=self.datastore.data['settings']['application']['pause_length'])
-
+                                    self.datastore.pause_watch(uuid=uuid,
+                                                               pause=self.datastore.data['settings']['application'][
+                                                                   'pause_length'])
 
                         except Exception as e:
-                            # Catch everything possible here, so that if a worker crashes, we don't lose it until restart!
+                            # Catch everything possible here, so that if a worker crashes, we don't lose it until
+                            # restart!
                             print("!!!! Exception in update_worker !!!\n", e)
                             self.app.logger.error("Exception reached processing watch UUID: %s - %s", uuid, str(e))
                             self.datastore.update_watch(uuid=uuid, data={'last_error': str(e)})
@@ -149,8 +160,8 @@ class update_worker(threading.Thread):
                         # Always record that we atleast tried
                         add_count = self.datastore.data['watching'][uuid]['total_searches'] + 1
                         self.datastore.update_watch(uuid=uuid, data={'fetch_time': round(time.time() - now, 3),
-                                                                           'last_checked': round(time.time()),
-                                                                           'total_searches': add_count})
+                                                                     'last_checked': round(time.time()),
+                                                                     'total_searches': add_count})
 
                 self.current_uuid = None  # Done
                 self.q.task_done()
